@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded shadow">
+    <h2 class="text-2xl font-bold mb-6">
+        {% if form.instance.pk %}Update{% else %}Create{% endif %}
+        {{ view.model.active_model_name|default:"Item" }}
+    </h2>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% for field in form %}
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="{{ field.id_for_label }}">
+                {{ field.label }}
+            </label>
+            {{ field }}
+            {% if field.errors %}
+            <p class="text-red-500 text-xs italic mt-1">{{ field.errors.0 }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <div class="flex items-center justify-between mt-6">
+            <button
+                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                type="submit">
+                Save
+            </button>
+            <a href="javascript:history.back()"
+                class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

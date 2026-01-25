@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-8 rounded shadow text-center">
+    <h2 class="text-xl font-bold mb-4 text-red-600">Confirm Deletion</h2>
+    <p class="mb-6 text-gray-600">Are you sure you want to delete <strong>"{{ object }}"</strong>? This action cannot be
+        undone.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="flex justify-center space-x-4">
+            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                Delete
+            </button>
+            <a href="javascript:history.back()"
+                class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

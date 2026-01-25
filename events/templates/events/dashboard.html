@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mb-8">
+    <h2 class="text-3xl font-bold mb-6">Organizer Dashboard</h2>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow cursor-pointer hover:bg-blue-50 transition"
+            onclick="showSection('all')">
+            <h3 class="text-gray-500 text-sm font-uppercase">Total Events</h3>
+            <p class="text-3xl font-bold text-blue-600">{{ total_events }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow cursor-pointer hover:bg-green-50 transition"
+            onclick="showSection('upcoming')">
+            <h3 class="text-gray-500 text-sm font-uppercase">Upcoming Events</h3>
+            <p class="text-3xl font-bold text-green-600">{{ upcoming_events }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow cursor-pointer hover:bg-red-50 transition"
+            onclick="showSection('past')">
+            <h3 class="text-gray-500 text-sm font-uppercase">Past Events</h3>
+            <p class="text-3xl font-bold text-red-600">{{ past_events }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-gray-500 text-sm font-uppercase">Total Participants</h3>
+            <p class="text-3xl font-bold text-purple-600">{{ total_participants }}</p>
+        </div>
+    </div>
+
+    <!-- Dynamic Content Section -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800" id="section-title">Today's Events</h3>
+        </div>
+        <div class="p-6">
+            <div id="section-today">
+                {% if todays_events %}
+                {% include "events/includes/event_table.html" with events=todays_events %}
+                {% else %}
+                <p class="text-gray-500">No events scheduled for today.</p>
+                {% endif %}
+            </div>
+
+            <div id="section-upcoming" class="hidden">
+                {% if upcoming_events_list %}
+                {% include "events/includes/event_table.html" with events=upcoming_events_list %}
+                {% else %}
+                <p class="text-gray-500">No upcoming events.</p>
+                {% endif %}
+            </div>
+
+            <div id="section-past" class="hidden">
+                {% if past_events_list %}
+                {% include "events/includes/event_table.html" with events=past_events_list %}
+                {% else %}
+                <p class="text-gray-500">No past events.</p>
+                {% endif %}
+            </div>
+
+            <div id="section-all" class="hidden">
+                <p class="text-gray-500">Please visit the Events page for the full list.</p>
+                <a href="{% url 'event_list' %}" class="text-blue-600 hover:underline mt-2 inline-block">Go to Events
+                    &rarr;</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showSection(sectionName) {
+        // Hide all sections
+        ['today', 'upcoming', 'past', 'all'].forEach(name => {
+            document.getElementById('section-' + name).classList.add('hidden');
+        });
+
+        // Show selected
+        document.getElementById('section-' + sectionName).classList.remove('hidden');
+
+        // Update Title
+        const titles = {
+            'today': "Today's Events",
+            'upcoming': "Upcoming Events",
+            'past': "Past Events",
+            'all': "All Events"
+        };
+        document.getElementById('section-title').textContent = titles[sectionName] || "Events";
+    }
+</script>
+{% endblock %}

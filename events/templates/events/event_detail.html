@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="max-w-4xl mx-auto">
+    <div class="mb-6">
+        <a href="{% url 'event_list' %}" class="text-blue-600 hover:underline">&larr; Back to Events</a>
+    </div>
+
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
+        <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+            <div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900">{{ event.name }}</h3>
+                <p class="mt-1 max-w-2xl text-sm text-gray-500">{{ event.category.name }}</p>
+            </div>
+            <div class="space-x-2">
+                <a href="{% url 'event_update' event.pk %}"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-medium">Edit</a>
+                <a href="{% url 'event_delete' event.pk %}"
+                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-medium">Delete</a>
+            </div>
+        </div>
+        <div class="border-t border-gray-200">
+            <dl>
+                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Date & Time</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ event.date }} at {{ event.time }}
+                    </dd>
+                </div>
+                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Location</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ event.location }}</dd>
+                </div>
+                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Description</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ event.description|linebreaks }}</dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+
+    <div class="bg-white shadow sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Participants ({{ event.participants.count }})</h3>
+        </div>
+        <ul role="list" class="divide-y divide-gray-200">
+            {% for participant in event.participants.all %}
+            <li class="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-blue-600 truncate">{{ participant.name }}</p>
+                    <div class="ml-2 flex-shrink-0 flex">
+                        <p
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            {{ participant.email }}</p>
+                    </div>
+                </div>
+            </li>
+            {% empty %}
+            <li class="px-4 py-4 sm:px-6 text-gray-500 text-sm">No participants registered yet.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
