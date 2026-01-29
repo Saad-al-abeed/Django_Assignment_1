@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mb-8">
+    <h2 class="text-3xl font-bold mb-6">Participant Dashboard</h2>
+
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">My RSVP'd Events</h3>
+        </div>
+        <div class="p-6">
+            {% if rsvp_events %}
+            <ul class="divide-y divide-gray-200">
+                {% for event in rsvp_events %}
+                <li class="py-4 flex justify-between items-center">
+                    <div>
+                        <a href="{% url 'event_detail' event.pk %}"
+                            class="text-lg font-bold hover:underline text-blue-600">{{ event.name }}</a>
+                        <p class="text-gray-600">{{ event.date }} at {{ event.time }}</p>
+                        <p class="text-gray-500 text-sm">{{ event.location }}</p>
+                    </div>
+                    <div>
+                        <span
+                            class="bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">Going</span>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-gray-500">You haven't RSVP'd to any events yet.</p>
+            <a href="{% url 'event_list' %}" class="text-blue-600 hover:underline mt-2 inline-block">Browse Events
+                &rarr;</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

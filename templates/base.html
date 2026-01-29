@@ -15,10 +15,19 @@
             <a href="{% url 'event_list' %}" class="text-2xl font-bold">EventMS</a>
             <div class="space-x-4">
                 <a href="{% url 'event_list' %}" class="hover:text-blue-200">Events</a>
-                <a href="{% url 'category_list' %}" class="hover:text-blue-200">Categories</a>
-                <a href="{% url 'participant_list' %}" class="hover:text-blue-200">Participants</a>
-                <a href="{% url 'dashboard' %}"
-                    class="bg-white text-blue-600 px-3 py-1 rounded hover:bg-gray-100">Dashboard</a>
+                
+                {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="bg-white text-blue-600 px-3 py-1 rounded hover:bg-gray-100">Dashboard</a>
+                    <span class="font-semibold text-blue-200">Hi, {{ user.username }}</span>
+                    <!-- Handled by simple link to logout view -->
+                    <form action="{% url 'logout' %}" method="post" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="hover:text-blue-200">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" class="hover:text-blue-200">Login</a>
+                    <a href="{% url 'sign_up' %}" class="bg-white text-blue-600 px-3 py-1 rounded hover:bg-gray-100">Sign Up</a>
+                {% endif %}
             </div>
         </div>
     </nav>

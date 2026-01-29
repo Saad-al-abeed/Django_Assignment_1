@@ -14,6 +14,20 @@
                 <p class="mt-1 max-w-2xl text-sm text-gray-500">{{ event.category.name }}</p>
             </div>
             <div class="space-x-2">
+                {% if user.is_authenticated %}
+                {% if is_rsvped %}
+                <button disabled
+                    class="bg-gray-400 text-white px-4 py-2 rounded text-sm font-medium cursor-not-allowed">RSVP'd</button>
+                {% else %}
+                <a href="{% url 'rsvp_event' event.pk %}"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium">RSVP Now</a>
+                {% endif %}
+                {% else %}
+                <a href="{% url 'login' %}"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium">Login to
+                    RSVP</a>
+                {% endif %}
+
                 <a href="{% url 'event_update' event.pk %}"
                     class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-medium">Edit</a>
                 <a href="{% url 'event_delete' event.pk %}"
@@ -47,7 +61,7 @@
             {% for participant in event.participants.all %}
             <li class="px-4 py-4 sm:px-6 hover:bg-gray-50">
                 <div class="flex items-center justify-between">
-                    <p class="text-sm font-medium text-blue-600 truncate">{{ participant.name }}</p>
+                    <p class="text-sm font-medium text-blue-600 truncate">{{ participant.username }}</p>
                     <div class="ml-2 flex-shrink-0 flex">
                         <p
                             class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">

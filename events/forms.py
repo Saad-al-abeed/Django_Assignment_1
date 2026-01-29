@@ -1,5 +1,7 @@
 from django import forms
-from .models import Category, Event, Participant
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
+from .models import Category, Event
 
 class CategoryForm(forms.ModelForm):
     class Meta:
@@ -13,7 +15,7 @@ class CategoryForm(forms.ModelForm):
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ['name', 'description', 'date', 'time', 'location', 'category']
+        fields = ['name', 'description', 'date', 'time', 'location', 'category', 'event_image']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border rounded'}),
             'description': forms.Textarea(attrs={'class': 'w-full px-3 py-2 border rounded', 'rows': 3}),
@@ -21,14 +23,17 @@ class EventForm(forms.ModelForm):
             'time': forms.TimeInput(attrs={'class': 'w-full px-3 py-2 border rounded', 'type': 'time'}),
             'location': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border rounded'}),
             'category': forms.Select(attrs={'class': 'w-full px-3 py-2 border rounded'}),
+            'event_image': forms.FileInput(attrs={'class': 'w-full px-3 py-2 border rounded'}),
         }
 
-class ParticipantForm(forms.ModelForm):
+class UserSignupForm(UserCreationForm):
+    first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'w-full px-3 py-2 border rounded'}))
+    last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'w-full px-3 py-2 border rounded'}))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'w-full px-3 py-2 border rounded'}))
+
     class Meta:
-        model = Participant
-        fields = ['name', 'email', 'events']
+        model = User
+        fields = ['username', 'email', 'first_name', 'last_name']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border rounded'}),
-            'email': forms.EmailInput(attrs={'class': 'w-full px-3 py-2 border rounded'}),
-            'events': forms.SelectMultiple(attrs={'class': 'w-full px-3 py-2 border rounded h-32'}),
+            'username': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border rounded'}),
         }
