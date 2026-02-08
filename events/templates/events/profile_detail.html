@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-6 rounded shadow">
+    <h2 class="text-2xl font-bold mb-4">Profile</h2>
+    <div class="flex items-center space-x-6">
+        <div class="w-32 h-32 rounded-full overflow-hidden border-2 border-gray-300">
+            {% if profile_user.profile_picture %}
+            <img src="{{ profile_user.profile_picture.url }}" alt="Profile Picture" class="w-full h-full object-cover">
+            {% else %}
+            <div class="bg-gray-200 w-full h-full flex items-center justify-center text-gray-500">No Img</div>
+            {% endif %}
+        </div>
+        <div>
+            <h3 class="text-xl font-semibold">{{ profile_user.get_full_name|default:profile_user.username }}</h3>
+            <p class="text-gray-600">Username: {{ profile_user.username }}</p>
+            <p class="text-gray-600">Email: {{ profile_user.email }}</p>
+            <p class="text-gray-600">Phone: {{ profile_user.phone_number }}</p>
+        </div>
+    </div>
+
+    <div class="mt-6 flex space-x-4">
+        <a href="{% url 'profile_edit' %}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+            Edit Profile
+        </a>
+        <a href="{% url 'change_password' %}"
+            class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded">
+            Change Password
+        </a>
+    </div>
+</div>
+{% endblock %}

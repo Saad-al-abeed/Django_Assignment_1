@@ -1,7 +1,9 @@
 from django import forms
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
 from .models import Category, Event
+
+User = get_user_model()
 
 class CategoryForm(forms.ModelForm):
     class Meta:
@@ -30,10 +32,24 @@ class UserSignupForm(UserCreationForm):
     first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'w-full px-3 py-2 border rounded'}))
     last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'w-full px-3 py-2 border rounded'}))
     email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'w-full px-3 py-2 border rounded'}))
+    phone_number = forms.CharField(widget=forms.TextInput(attrs={'class': 'w-full px-3 py-2 border rounded'}), required=False)
+    profile_picture = forms.ImageField(widget=forms.FileInput(attrs={'class': 'w-full px-3 py-2 border rounded'}), required=False)
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'first_name', 'last_name']
+        fields = ['username', 'email', 'first_name', 'last_name', 'phone_number', 'profile_picture']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border rounded'}),
         }
+
+class UserUpdateForm(forms.ModelForm):
+    first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'w-full px-3 py-2 border rounded'}))
+    last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'w-full px-3 py-2 border rounded'}))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'w-full px-3 py-2 border rounded'}))
+    phone_number = forms.CharField(widget=forms.TextInput(attrs={'class': 'w-full px-3 py-2 border rounded'}), required=False)
+    profile_picture = forms.ImageField(widget=forms.FileInput(attrs={'class': 'w-full px-3 py-2 border rounded'}), required=False)
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'phone_number', 'profile_picture']
+

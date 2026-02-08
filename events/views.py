@@ -1,97 +1,148 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, logout
-from django.contrib.auth.models import User, Group
+from django.contrib.auth import login, logout, get_user_model
+from django.contrib.auth.models import Group
+User = get_user_model()
 from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
+from django.utils.decorators import method_decorator, classonlymethod
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.views import PasswordChangeView, PasswordResetView, PasswordResetConfirmView
 from django.contrib import messages
 from django.db.models import Count, Q
-from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView, View
+from django.urls import reverse_lazy, reverse
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView, View, RedirectView
 from django.utils import timezone
 from .models import Category, Event
-from .forms import CategoryForm, EventForm, UserSignupForm
+from .forms import CategoryForm, EventForm, UserSignupForm, UserUpdateForm
 from .decorators import unauthenticated_user, allowed_users, admin_only
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 
 # Authentication Views
-@unauthenticated_user
-def sign_up(request):
-    if request.method == 'POST':
-        form = UserSignupForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.is_active = False # Deactivate until email confirmation
-            user.save()
-            
-            # Default to 'Participant' group
-            group, created = Group.objects.get_or_create(name='Participant')
-            user.groups.add(group)
-            
-            # Signal send_activation_email will handle the email
-            messages.success(request, 'Account created! Please check your email to activate your account.')
-            return redirect('login')
-    else:
-        form = UserSignupForm()
-    return render(request, 'registration/signup.html', {'form': form})
+class UserSignupView(UserPassesTestMixin, CreateView):
+    model = User
+    form_class = UserSignupForm
+    template_name = 'registration/signup.html'
+    success_url = reverse_lazy('login')
 
-def activate(request, uidb64, token):
-    try:
-        uid = force_str(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
+    def test_func(self):
+        return self.request.user.is_anonymous
 
-    if user is not None and default_token_generator.check_token(user, token):
-        user.is_active = True
+    def handle_no_permission(self):
+        return redirect('dashboard')
+
+    def form_valid(self, form):
+        user = form.save(commit=False)
+        user.is_active = False # Deactivate until email confirmation
         user.save()
-        messages.success(request, 'Account activated! You can now login.')
-        return redirect('login')
-    else:
-        messages.error(request, 'Activation link is invalid!')
-        return redirect('login')
+        
+        # Default to 'Participant' group
+        group, created = Group.objects.get_or_create(name='Participant')
+        user.groups.add(group)
+        
+        # Signal send_activation_email will handle the email
+        messages.success(self.request, 'Account created! Please check your email to activate your account.')
+        return super().form_valid(form)
+
+class ActivateAccountView(RedirectView):
+    url = reverse_lazy('login')
+
+    def get(self, request, *args, **kwargs):
+        uidb64 = kwargs.get('uidb64')
+        token = kwargs.get('token')
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+
+        if user is not None and default_token_generator.check_token(user, token):
+            user.is_active = True
+            user.save()
+            messages.success(request, 'Account activated! You can now login.')
+        else:
+            messages.error(request, 'Activation link is invalid!')
+        return super().get(request, *args, **kwargs)
 
 # Dashboard
-@login_required
-def dashboard(request):
-    today = timezone.now().date()
-    # Common context
-    context = {}
-    
-    group = None
-    if request.user.groups.exists():
-        group = request.user.groups.all()[0].name
-    
-    if group == 'Admin':
-        context['total_users'] = User.objects.count()
-        context['total_events'] = Event.objects.count()
-        context['total_categories'] = Category.objects.count()
-        context['events'] = Event.objects.all().order_by('date')
-        return render(request, 'events/dashboard_admin.html', context)
+class DashboardView(LoginRequiredMixin, TemplateView):
+    def get_template_names(self):
+        user = self.request.user
+        if user.groups.filter(name='Admin').exists():
+            return ['events/dashboard_admin.html']
+        elif user.groups.filter(name='Organizer').exists():
+            return ['events/dashboard_organizer.html']
+        else:
+            return ['events/dashboard_participant.html']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        today = timezone.now().date()
         
-    elif group == 'Organizer':
-        context['total_events'] = Event.objects.count()
-        context['total_categories'] = Category.objects.count()
-        context['events'] = Event.objects.all().order_by('date')
-        return render(request, 'events/dashboard_organizer.html', context)
-        
-    else: # Participant
-        # Events user has RSVP'd to
-        context['rsvp_events'] = request.user.rsvp_events.all()
-        return render(request, 'events/dashboard_participant.html', context)
+        if user.groups.filter(name='Admin').exists():
+            context['total_users'] = User.objects.count()
+            context['total_events'] = Event.objects.count()
+            context['total_categories'] = Category.objects.count()
+            context['events'] = Event.objects.all().order_by('date') # Show all events for admin
+        elif user.groups.filter(name='Organizer').exists():
+            # Assuming organizers can see all events or just theirs? 
+            # Existing code: Event.objects.all().order_by('date')
+            context['total_events'] = Event.objects.count()
+            context['total_categories'] = Category.objects.count()
+            context['events'] = Event.objects.all().order_by('date')
+        else: # Participant
+            context['rsvp_events'] = user.rsvp_events.all()
+        return context
 
 # RSVP
-@login_required
-@allowed_users(allowed_roles=['Participant'])
-def rsvp_event(request, pk):
-    event = get_object_or_404(Event, pk=pk)
-    if request.user in event.participants.all():
-        messages.warning(request, "You have already RSVP'd to this event.")
-    else:
-        event.participants.add(request.user)
-        messages.success(request, f"You have successfully RSVP'd to {event.name}!")
-    return redirect('event_detail', pk=pk)
+class RSVPEventView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return self.request.user.groups.filter(name='Participant').exists()
+
+    def handle_no_permission(self):
+         messages.warning(self.request, "Only participants can RSVP.")
+         return redirect('event_detail', pk=self.kwargs['pk'])
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get('pk')
+        event = get_object_or_404(Event, pk=pk)
+        if request.user in event.participants.all():
+            messages.warning(request, "You have already RSVP'd to this event.")
+        else:
+            event.participants.add(request.user)
+            messages.success(request, f"You have successfully RSVP'd to {event.name}!")
+        return redirect('event_detail', pk=pk)
+
+# Profile Views
+class ProfileDetailView(LoginRequiredMixin, DetailView):
+    model = User
+    template_name = 'events/profile_detail.html'
+    context_object_name = 'profile_user'
+
+    def get_object(self):
+        return self.request.user
+
+class ProfileUpdateView(LoginRequiredMixin, UpdateView):
+    model = User
+    form_class = UserUpdateForm
+    template_name = 'events/profile_form.html'
+    success_url = reverse_lazy('profile')
+
+    def get_object(self):
+        return self.request.user
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Profile updated successfully!')
+        return super().form_valid(form)
+
+class CustomPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
+    template_name = 'registration/password_change_form.html'
+    success_url = reverse_lazy('profile')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Password changed successfully!')
+        return super().form_valid(form)
 
 # Event Views
 class EventListView(ListView):
